@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>연산 순서 마스터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gamja+Flower&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{font-family:'Jua','Gamja Flower','Apple SD Gothic Neo','Malgun Gothic',sans-serif;min-height:100vh;background:#0f172a;color:#e2e8f0;overflow-x:hidden;letter-spacing:.02em}
+.container{max-width:480px;margin:0 auto;padding:12px;min-height:100vh;position:relative}
+
+/* ===== 스테이지 선택 화면 ===== */
+#stageScreen{animation:fadeIn .4s ease}
+.main-header{text-align:center;padding:24px 0 18px}
+.main-header h1{font-size:1.6rem;background:linear-gradient(135deg,#fbbf24,#f472b6,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.main-header p{font-size:.82rem;color:#94a3b8}
+.stage-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:20px}
+.stage-card{border-radius:16px;padding:18px 14px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;border:2px solid transparent}
+.stage-card:hover{transform:translateY(-3px)}
+.stage-card:active{transform:scale(.97)}
+.stage-card .stage-num{font-size:.65rem;font-weight:800;letter-spacing:2px;opacity:.7;margin-bottom:6px}
+.stage-card .stage-icon{font-size:1.8rem;margin-bottom:6px}
+.stage-card .stage-name{font-size:.92rem;font-weight:700;margin-bottom:3px;color:#fff}
+.stage-card .stage-desc{font-size:.7rem;opacity:.75;line-height:1.3}
+.stage-card.s1{background:linear-gradient(135deg,#059669,#10b981)}
+.stage-card.s2{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.stage-card.s3{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.stage-card.s4{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+.stage-card.s5{background:linear-gradient(135deg,#dc2626,#ef4444)}
+.stage-card.s6{background:linear-gradient(135deg,#0891b2,#06b6d4)}
+.stage-card.s7{background:linear-gradient(135deg,#c026d3,#d946ef);grid-column:1/-1}
+.stage-card::after{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);pointer-events:none}
+
+/* ===== 게임 화면 ===== */
+#gameScreen{display:none;animation:fadeIn .3s ease}
+.game-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.back-btn{width:36px;height:36px;border-radius:10px;border:none;background:rgba(255,255,255,.1);color:#e2e8f0;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.game-stage-title{flex:1;font-size:1rem;font-weight:700;color:#fff}
+.game-stage-badge{padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:700;color:#fff}
+
+.scoreboard{display:flex;gap:6px;margin-bottom:10px}
+.sb-item{flex:1;text-align:center;background:rgba(255,255,255,.06);border-radius:10px;padding:8px 4px}
+.sb-item .sl{font-size:.6rem;color:#94a3b8;margin-bottom:1px}
+.sb-item .sv{font-size:1.15rem;font-weight:800;color:#fff}
+
+.diff-bar{display:flex;gap:6px;margin-bottom:10px}
+.diff-btn{flex:1;padding:8px;border:2px solid rgba(255,255,255,.15);border-radius:10px;background:transparent;color:#cbd5e1;font-size:.8rem;font-weight:700;cursor:pointer;transition:.2s}
+.diff-btn.active{background:#fff;color:#0f172a;border-color:#fff}
+
+.progress-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-bottom:12px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:3px;transition:width .5s}
+
+/* 게임 카드 */
+.game-card{background:#1e293b;border-radius:20px;padding:20px 16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.06);min-height:280px}
+
+/* 타이머 */
+.timer-wrap{margin-bottom:14px}
+.timer-outer{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.timer-fill{height:100%;border-radius:4px;transition:width .3s linear;background:linear-gradient(90deg,#10b981,#34d399)}
+.timer-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.timer-fill.danger{background:linear-gradient(90deg,#ef4444,#f87171)}
+.timer-fill.critical{animation:blink .5s infinite}
+.timer-row{display:flex;justify-content:space-between;margin-top:4px;font-size:.72rem;color:#64748b}
+.timer-sec{font-size:.95rem;font-weight:800;color:#10b981;transition:color .3s}
+.timer-sec.warn{color:#f59e0b}
+.timer-sec.danger{color:#ef4444}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* 시작 화면 */
+.pre-game{text-align:center;padding:20px 0}
+.pre-game .pg-icon{font-size:3rem;margin-bottom:10px}
+.pre-game .pg-title{font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:6px}
+.pre-game .pg-desc{font-size:.85rem;color:#94a3b8;margin-bottom:20px;line-height:1.5}
+.start-btn{padding:14px 48px;border:none;border-radius:14px;font-size:1.05rem;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 4px 20px rgba(118,75,162,.4)}
+.start-btn:active{transform:scale(.96)}
+
+/* 수식 영역 */
+.expr-area{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;padding:16px 4px;min-height:80px}
+.e-num{font-size:1.9rem;font-weight:700;color:#f1f5f9;min-width:30px;text-align:center;padding:0 4px}
+.e-op{position:relative;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;cursor:pointer;border:3px solid #334155;background:#1e293b;color:#94a3b8;transition:.15s}
+.e-op:active{transform:scale(.9)}
+.e-op.selected{background:#7c3aed;color:#fff;border-color:#7c3aed;cursor:default}
+.e-op.wrong{animation:shake .4s;border-color:#ef4444;background:rgba(239,68,68,.15)}
+.e-op.revealed{background:#10b981;color:#fff;border-color:#10b981;cursor:default}
+.e-op.disabled{pointer-events:none;opacity:.4}
+.e-paren{font-size:2.2rem;font-weight:300;color:#818cf8;padding:0 1px}
+.e-paren.inner{color:#f472b6}
+.badge{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#fbbf24;color:#0f172a;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(251,191,36,.4)}
+
+/* 문장제 영역 */
+.wp-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:16px;font-size:.92rem;line-height:1.65;color:#e2e8f0}
+.wp-expr{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap}
+.wp-num{font-size:1.7rem;font-weight:700;color:#f1f5f9}
+.wp-blank{width:46px;height:46px;border-radius:12px;border:3px dashed #475569;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:#64748b;cursor:pointer;transition:.2s;background:rgba(255,255,255,.03)}
+.wp-blank.active{border-color:#818cf8;background:rgba(129,140,248,.15);color:#818cf8;animation:pulse2 1s infinite}
+.wp-blank.filled{border-style:solid;color:#e2e8f0;border-color:#475569}
+.wp-blank.correct-mark{border-color:#10b981;color:#10b981;background:rgba(16,185,129,.1)}
+.wp-blank.wrong-mark{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,.1)}
+.wp-eq{font-size:1.7rem;font-weight:700;color:#64748b}
+@keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(129,140,248,.3)}50%{box-shadow:0 0 0 8px rgba(129,140,248,0)}}
+
+.op-palette{display:flex;justify-content:center;gap:10px;margin:12px 0}
+.op-btn{width:52px;height:52px;border-radius:14px;border:2px solid #334155;background:#1e293b;color:#e2e8f0;font-size:1.5rem;font-weight:700;cursor:pointer;transition:.15s}
+.op-btn:active{transform:scale(.9);background:#334155}
+
+/* 숫자 입력 */
+.answer-row{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 12px;font-size:1.4rem;font-weight:700;color:#94a3b8}
+.answer-display{min-width:80px;height:50px;border-radius:12px;background:rgba(255,255,255,.05);border:2px solid #334155;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;color:#fff}
+.answer-display.correct-ans{border-color:#10b981;color:#10b981;background:rgba(16,185,129,.1)}
+.answer-display.wrong-ans{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,.1)}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;margin:0 auto}
+.num-btn{height:48px;border-radius:12px;border:2px solid #334155;background:#1e293b;color:#e2e8f0;font-size:1.2rem;font-weight:700;cursor:pointer;transition:.15s}
+.num-btn:active{background:#334155;transform:scale(.95)}
+.num-btn.confirm-btn{background:#7c3aed;border-color:#7c3aed;color:#fff}
+.num-btn.del-btn{color:#f87171}
+
+/* 안내 / 해설 */
+.instruction{text-align:center;margin-top:12px;font-size:.88rem;color:#64748b;min-height:24px}
+.instruction.ok{color:#10b981;font-weight:700;font-size:1rem}
+.instruction.err{color:#ef4444;font-weight:600}
+.instruction.timeout{color:#ef4444;font-weight:700}
+.time-bonus{display:none;text-align:center;margin-top:4px;font-size:.82rem;font-weight:700;color:#38bdf8}
+.time-bonus.show{display:block;animation:pop .5s ease}
+.explanation{display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:12px;margin-top:12px}
+.explanation.show{display:block;animation:pop .3s ease}
+.explanation h4{color:#34d399;margin-bottom:6px;font-size:.85rem}
+.explanation .step{font-size:.82rem;color:#6ee7b7;padding:3px 0;border-bottom:1px dashed rgba(16,185,129,.15)}
+.explanation .step:last-child{border:none}
+.step-badge{display:inline-block;width:18px;height:18px;border-radius:50%;background:#10b981;color:#fff;font-size:.65rem;font-weight:700;text-align:center;line-height:18px;margin-right:4px}
+
+/* 버튼 영역 */
+.btn-area{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.g-btn{padding:10px 22px;border:none;border-radius:12px;font-size:.9rem;font-weight:700;cursor:pointer;transition:.15s}
+.g-btn:active{transform:scale(.95)}
+.btn-reset{background:rgba(255,255,255,.08);color:#94a3b8}
+.btn-hint{background:rgba(251,191,36,.15);color:#fbbf24}
+.btn-next{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 15px rgba(118,75,162,.3);display:none}
+.btn-check{background:linear-gradient(135deg,#059669,#10b981);color:#fff;padding:12px 36px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px;display:none}
+.btn-check.show{display:inline-block}
+.btn-check:active{transform:scale(.95)}
+
+/* 규칙 */
+.rules{background:rgba(255,255,255,.04);border-radius:14px;padding:14px;margin-bottom:16px;border:1px solid rgba(255,255,255,.06)}
+.rules h3{font-size:.82rem;color:#94a3b8;margin-bottom:6px}
+.rules ul{list-style:none;font-size:.78rem;color:#64748b;line-height:1.9}
+.rules li::before{content:'◆ ';color:#818cf8}
+
+/* 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#1e293b;border-radius:24px;padding:32px 24px;text-align:center;max-width:380px;width:100%;animation:pop .3s;border:1px solid rgba(255,255,255,.08)}
+.modal .m-emoji{font-size:3.5rem;margin-bottom:10px}
+.modal h2{font-size:1.4rem;color:#fff;margin-bottom:6px}
+.modal p{color:#94a3b8;margin-bottom:18px;font-size:.9rem;line-height:1.4}
+.modal .stats{display:flex;justify-content:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.modal .stat{text-align:center;min-width:55px}
+.modal .stat .sn{font-size:1.5rem;font-weight:800;color:#818cf8}
+.modal .stat .sl{font-size:.68rem;color:#64748b}
+.modal-btns{display:flex;gap:10px;justify-content:center}
+.m-btn{padding:12px 24px;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer}
+.m-btn:active{transform:scale(.95)}
+.m-btn-primary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.m-btn-secondary{background:rgba(255,255,255,.08);color:#94a3b8}
+
+/* 유틸 */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ===== 스테이지 선택 ===== -->
+<div id="stageScreen">
+    <div class="main-header">
+        <h1>연산 순서 마스터</h1>
+        <p>스테이지를 선택해서 연산 순서를 정복하세요!</p>
+    </div>
+    <div class="stage-grid" id="stageGrid"></div>
+    <div class="rules">
+        <h3>📐 연산 순서 규칙</h3>
+        <ul>
+            <li>괄호 ( ) 안의 계산을 가장 먼저!</li>
+            <li>곱셈(×)과 나눗셈(÷)을 먼저 계산</li>
+            <li>덧셈(+)과 뺄셈(-)은 나중에 계산</li>
+            <li>같은 우선순위는 왼쪽에서 오른쪽 순서로</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ===== 게임 화면 ===== -->
+<div id="gameScreen">
+    <div class="game-top">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <div class="game-stage-title" id="gTitle"></div>
+        <div class="game-stage-badge" id="gBadge"></div>
+    </div>
+    <div class="scoreboard">
+        <div class="sb-item"><div class="sl">점수</div><div class="sv" id="uiScore">0</div></div>
+        <div class="sb-item"><div class="sl">연속</div><div class="sv" id="uiStreak">0</div></div>
+        <div class="sb-item"><div class="sl">문제</div><div class="sv" id="uiQ">0/10</div></div>
+    </div>
+    <div class="diff-bar" id="diffBar"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0"></div></div>
+    <div class="game-card" id="gameCard"></div>
+    <div class="btn-area" id="btnArea" style="display:none">
+        <button class="g-btn btn-reset" onclick="resetQ()">다시</button>
+        <button class="g-btn btn-hint" onclick="doHint()">힌트</button>
+        <button class="g-btn btn-next" id="nextBtn" onclick="nextQ()">다음 ▶</button>
+    </div>
+</div>
+</div>
+
+<!-- 결과 모달 -->
+<div class="modal-bg" id="resultModal">
+    <div class="modal">
+        <div class="m-emoji" id="mEmoji">🎉</div>
+        <h2 id="mTitle">잘했어요!</h2>
+        <p id="mMsg"></p>
+        <div class="stats">
+            <div class="stat"><div class="sn" id="mScore">0</div><div class="sl">점수</div></div>
+            <div class="stat"><div class="sn" id="mCorrect">0</div><div class="sl">정답</div></div>
+            <div class="stat"><div class="sn" id="mStreak">0</div><div class="sl">최대연속</div></div>
+            <div class="stat"><div class="sn" id="mTime">0</div><div class="sl">시간보너스</div></div>
+        </div>
+        <div class="modal-btns">
+            <button class="m-btn m-btn-secondary" onclick="goBack()">스테이지</button>
+            <button class="m-btn m-btn-primary" onclick="restartGame()">다시 도전</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== 설정 ====================
+const STAGES = [
+    {id:1,name:'덧셈과 뺄셈',desc:'같은 우선순위, 왼쪽부터! 고난이도에는 괄호도!',icon:'➕ ➖',cls:'s1',ops:['+','-'],type:'order',color:'#10b981'},
+    {id:2,name:'곱셈과 나눗셈',desc:'곱하기·나누기도 왼쪽부터 차례대로!',icon:'✖ ➗',cls:'s2',ops:['×','÷'],type:'order',color:'#3b82f6'},
+    {id:3,name:'덧셈·뺄셈·곱셈',desc:'곱셈이 덧셈보다 먼저! 순서에 주의!',icon:'➕ ➖ ✖',cls:'s3',ops:['+','-','×'],type:'order',color:'#f59e0b'},
+    {id:4,name:'덧셈·뺄셈·나눗셈',desc:'나눗셈이 먼저인 걸 기억하세요!',icon:'➕ ➖ ➗',cls:'s4',ops:['+','-','÷'],type:'order',color:'#8b5cf6'},
+    {id:5,name:'사칙연산 종합',desc:'모든 연산이 섞인 최강 도전!',icon:'🔢',cls:'s5',ops:['+','-','×','÷'],type:'order',color:'#ef4444'},
+    {id:6,name:'문장제 → 식 세우기',desc:'문장을 읽고 알맞은 연산 기호를 넣어요!',icon:'📝',cls:'s6',ops:[],type:'word-ops',color:'#06b6d4'},
+    {id:7,name:'문장제 → 답 구하기',desc:'문장제를 읽고 직접 정답을 계산하세요!',icon:'🧠',cls:'s7',ops:[],type:'word-answer',color:'#d946ef'}
+];
+
+const TOTAL_Q = 10;
+const TIME_CFG = {
+    order:  {1:30,2:25,3:20},
+    'word-ops': {1:45,2:35,3:28},
+    'word-answer':{1:50,2:40,3:30}
+};
+
+// ==================== 상태 ====================
+let S = {
+    stageId:1, diff:1, score:0, streak:0, maxStreak:0,
+    qNum:0, correct:0, totalTimeBonus:0,
+    // 현재 문제
+    expr:null, correctOrder:[], userOrder:[], step:0,
+    hintUsed:false, mistake:false, done:false,
+    totalTime:30, timeLeft:30, timer:null,
+    // 문장제
+    wp:null, wpUserOps:[], wpActiveSlot:0, wpAnswer:'',
+};
+
+// ==================== 유틸 ====================
+const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick = a => a[ri(0,a.length-1)];
+const $ = id => document.getElementById(id);
+
+// ==================== 스테이지 선택 화면 ====================
+function renderStages(){
+    $('stageGrid').innerHTML = STAGES.map(s =>
+        `<div class="stage-card ${s.cls}" onclick="selectStage(${s.id})">
+            <div class="stage-num">STAGE ${s.id}</div>
+            <div class="stage-icon">${s.icon}</div>
+            <div class="stage-name">${s.name}</div>
+            <div class="stage-desc">${s.desc}</div>
+        </div>`
+    ).join('');
+}
+renderStages();
+
+function selectStage(id){
+    S.stageId = id;
+    S.diff = 1;
+    const st = STAGES[id-1];
+    $('stageScreen').style.display='none';
+    $('gameScreen').style.display='block';
+    $('gTitle').textContent = st.name;
+    $('gBadge').textContent = `STAGE ${id}`;
+    $('gBadge').style.background = st.color;
+    // 난이도 버튼
+    $('diffBar').innerHTML = [
+        {l:1,t:'쉬움'},{l:2,t:'보통'},{l:3,t:'어려움'}
+    ].map(d=>`<button class="diff-btn${d.l===1?' active':''}" data-l="${d.l}" onclick="setDiff(${d.l})">${d.t}</button>`).join('');
+    showPreGame();
+}
+
+function setDiff(l){
+    S.diff=l;
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('active',+b.dataset.l===l));
+}
+
+function goBack(){
+    stopTimer();
+    $('resultModal').classList.remove('show');
+    $('gameScreen').style.display='none';
+    $('stageScreen').style.display='block';
+}
+
+// ==================== 프리게임 ====================
+function showPreGame(){
+    const st = STAGES[S.stageId-1];
+    $('btnArea').style.display='none';
+    $('gameCard').innerHTML = `
+        <div class="pre-game">
+            <div class="pg-icon">${st.icon}</div>
+            <div class="pg-title">${st.name}</div>
+            <div class="pg-desc">${st.desc}<br>난이도를 선택하고 시작하세요!</div>
+            <button class="start-btn" onclick="startGame()">게임 시작</button>
+        </div>`;
+    $('uiScore').textContent='0'; $('uiStreak').textContent='0'; $('uiQ').textContent='0/'+TOTAL_Q;
+    $('progFill').style.width='0';
+    $('diffBar').style.display='flex';
+}
+
+// ==================== 게임 시작 ====================
+function startGame(){
+    S.score=0; S.streak=0; S.maxStreak=0; S.qNum=0; S.correct=0; S.totalTimeBonus=0;
+    $('uiScore').textContent='0'; $('uiStreak').textContent='0';
+    $('diffBar').style.display='none';
+    $('btnArea').style.display='flex';
+    nextQ();
+}
+
+function restartGame(){
+    $('resultModal').classList.remove('show');
+    S.score=0; S.streak=0; S.maxStreak=0; S.qNum=0; S.correct=0; S.totalTimeBonus=0;
+    $('uiScore').textContent='0'; $('uiStreak').textContent='0';
+    nextQ();
+}
+
+// ==================== 타이머 ====================
+function startTimer(){
+    stopTimer();
+    const st = STAGES[S.stageId-1];
+    S.totalTime = TIME_CFG[st.type][S.diff];
+    S.timeLeft = S.totalTime;
+    S.done = false;
+    updTimer();
+    S.timer = setInterval(()=>{
+        S.timeLeft--;
+        updTimer();
+        if(S.timeLeft<=0){stopTimer();onTimeUp();}
+    },1000);
+}
+function stopTimer(){if(S.timer){clearInterval(S.timer);S.timer=null;}}
+function updTimer(){
+    const pct = (S.timeLeft/S.totalTime)*100;
+    const f = document.querySelector('.timer-fill');
+    const t = document.querySelector('.timer-sec');
+    if(!f||!t) return;
+    f.style.width=pct+'%';
+    t.textContent=S.timeLeft+'초';
+    f.className='timer-fill'+(pct>50?'':pct>25?' warn':' danger'+(S.timeLeft<=5?' critical':''));
+    t.className='timer-sec'+(pct>50?'':pct>25?' warn':' danger');
+}
+
+// ==================== 다음 문제 ====================
+function nextQ(){
+    stopTimer();
+    if(S.qNum>=TOTAL_Q){showResults();return;}
+    S.qNum++; S.userOrder=[]; S.step=0; S.hintUsed=false; S.mistake=false; S.done=false;
+    S.wpAnswer=''; S.wpUserOps=[]; S.wpActiveSlot=0;
+    $('uiQ').textContent=S.qNum+'/'+TOTAL_Q;
+    $('progFill').style.width=(S.qNum/TOTAL_Q*100)+'%';
+    document.querySelector('.btn-next').style.display='none';
+
+    const st = STAGES[S.stageId-1];
+    if(st.type==='order') genOrderQ();
+    else if(st.type==='word-ops') genWordOpsQ();
+    else genWordAnswerQ();
+}
+
+// ==================== 순서 찾기 게임 (Stage 1-5) ====================
+function genOrderQ(){
+    const st = STAGES[S.stageId-1];
+    S.expr = generateExpr(st.ops, S.diff);
+    S.correctOrder = calcOrder(S.expr);
+    renderOrderGame();
+    startTimer();
+}
+
+function generateExpr(availOps, diff){
+    let numCount = diff===1?3:diff===2?4:5;
+    let ops=[], numbers=[], parenGroups=[];
+
+    // 연산자가 1종류만 있는 경우(스테이지1,2) vs 혼합
+    const hasHigh = availOps.some(o=>o==='×'||o==='÷');
+    const hasLow = availOps.some(o=>o==='+'||o==='-');
+    const mixed = hasHigh && hasLow;
+
+    // 연산자 생성
+    for(let i=0;i<numCount-1;i++) ops.push(pick(availOps));
+
+    // 혼합 스테이지: 반드시 서로 다른 우선순위 포함
+    if(mixed){
+        if(!ops.some(o=>o==='×'||o==='÷')) ops[ri(0,ops.length-1)]=pick(availOps.filter(o=>o==='×'||o==='÷'));
+        if(!ops.some(o=>o==='+'||o==='-')){
+            let idx=ri(0,ops.length-1);
+            let t=0;while((ops[idx]==='+'||ops[idx]==='-')&&t<10){idx=ri(0,ops.length-1);t++;}
+            ops[idx]=pick(availOps.filter(o=>o==='+'||o==='-'));
+        }
+    }
+
+    // 숫자 생성
+    numbers = Array.from({length:numCount},()=>ri(2,diff===3?15:diff===2?12:9));
+
+    // 나눗셈 정수 보장
+    for(let i=0;i<ops.length;i++){
+        if(ops[i]==='÷'){
+            const d=ri(2,6); numbers[i]=d*ri(1,5); numbers[i+1]=d;
+        }
+    }
+
+    // 괄호 추가
+    const parenChance = diff===1?0.55:diff===2?0.75:0.9;
+    if(Math.random()<parenChance && numCount>=3){
+        if(mixed){
+            // +/- 옆에 ×/÷ 있는 곳에 괄호 (순서 변경 효과)
+            const cands=[];
+            for(let i=0;i<ops.length;i++){
+                if(ops[i]==='+'||ops[i]==='-'){
+                    if((i>0&&(ops[i-1]==='×'||ops[i-1]==='÷'))||(i<ops.length-1&&(ops[i+1]==='×'||ops[i+1]==='÷')))
+                        cands.push(i);
+                }
+            }
+            if(cands.length>0){
+                const p=pick(cands);
+                parenGroups.push({numStart:p,numEnd:p+1});
+                // 어려움: 두 번째 괄호 추가 시도
+                if(diff>=3 && cands.length>1 && Math.random()<0.5){
+                    for(const c of cands){
+                        if(Math.abs(c-p)>=2){parenGroups.push({numStart:c,numEnd:c+1});break;}
+                    }
+                }
+            } else if(numCount>=4){
+                parenGroups.push({numStart:0,numEnd:1});
+            }
+        } else {
+            // 같은 우선순위만: 괄호가 계산 순서를 바꿈
+            if(diff>=2){
+                const p = ri(0, ops.length-2);
+                // 뒤쪽 연산에 괄호 → 뒤쪽이 먼저 계산됨
+                const start = Math.max(1, ri(1, numCount-2));
+                if(start < numCount-1) parenGroups.push({numStart:start, numEnd:start+1});
+            }
+            if(diff>=3 && numCount>=5 && Math.random()<0.5){
+                // 중첩 or 추가 괄호
+                if(parenGroups.length>0){
+                    const g=parenGroups[0];
+                    if(g.numStart>0) parenGroups.push({numStart:g.numStart-1,numEnd:g.numEnd});
+                } else {
+                    parenGroups.push({numStart:1,numEnd:2});
+                }
+            }
+        }
+    }
+
+    return {numbers,ops,parenGroups};
+}
+
+function getDepth(i,groups){let d=0;for(const g of groups)if(i>=g.numStart&&i<g.numEnd)d++;return d;}
+
+function calcOrder(expr){
+    const {ops,parenGroups}=expr;
+    const infos=ops.map((op,i)=>({
+        i, depth:getDepth(i,parenGroups),
+        pri:(op==='×'||op==='÷')?0:1
+    }));
+    infos.sort((a,b)=>b.depth-a.depth||a.pri-b.pri||a.i-b.i);
+    return infos.map(x=>x.i);
+}
+
+function renderOrderGame(){
+    const {numbers,ops,parenGroups}=S.expr;
+    let html=`<div class="timer-wrap"><div class="timer-outer"><div class="timer-fill"></div></div><div class="timer-row"><span>남은 시간</span><span class="timer-sec"></span></div></div>`;
+    html+=`<div class="expr-area">`;
+    for(let i=0;i<numbers.length;i++){
+        // 여는 괄호
+        const opens=parenGroups.filter(g=>g.numStart===i).sort((a,b)=>(b.numEnd-b.numStart)-(a.numEnd-a.numStart));
+        for(const g of opens){
+            const inner=parenGroups.some(g2=>g2!==g&&g2.numStart<=g.numStart&&g2.numEnd>=g.numEnd);
+            html+=`<span class="e-paren${inner?' inner':''}">(</span>`;
+        }
+        html+=`<span class="e-num">${numbers[i]}</span>`;
+        // 닫는 괄호
+        const closes=parenGroups.filter(g=>g.numEnd===i).sort((a,b)=>(a.numEnd-a.numStart)-(b.numEnd-b.numStart));
+        for(const g of closes){
+            const inner=parenGroups.some(g2=>g2!==g&&g2.numStart<=g.numStart&&g2.numEnd>=g.numEnd);
+            html+=`<span class="e-paren${inner?' inner':''}">) </span>`;
+        }
+        if(i<ops.length){
+            html+=`<div class="e-op" data-i="${i}" onclick="opClick(${i})" ontouchend="event.preventDefault();opClick(${i})">${ops[i]}</div>`;
+        }
+    }
+    html+=`</div><div class="instruction" id="inst">계산 순서대로 연산 기호를 터치하세요!</div><div class="time-bonus" id="tBonus"></div><div class="explanation" id="expl"></div>`;
+    $('gameCard').innerHTML=html;
+}
+
+function opClick(i){
+    if(S.done||S.userOrder.includes(i)||S.step>=S.correctOrder.length) return;
+    const el=document.querySelector(`.e-op[data-i="${i}"]`);
+    if(i===S.correctOrder[S.step]){
+        S.userOrder.push(i); S.step++;
+        el.classList.add('selected');
+        el.innerHTML+=`<div class="badge">${S.step}</div>`;
+        if(S.step>=S.correctOrder.length) onCorrect();
+        else setInst(`${S.step}번째 완료! 다음 순서를 터치하세요.`,'');
+    } else {
+        S.mistake=true;
+        el.classList.add('wrong');
+        setTimeout(()=>el.classList.remove('wrong'),400);
+        setInst('순서가 틀렸어요! 다시 생각해보세요.','err');
+    }
+}
+
+// ==================== 문장제 - 기호 입력 (Stage 6) ====================
+const WORD_PROBLEMS = [
+    // +- 문제
+    {text:'사탕이 {0}개 있습니다. 친구에게 {1}개를 더 받고, 동생에게 {2}개를 주었습니다. 남은 사탕은 몇 개일까요?',
+     ops:['+','-'],gen(){let a=ri(10,30),b=ri(3,12),c=ri(1,a+b-2);return[a,b,c]},tags:['+-']},
+    {text:'버스에 {0}명이 타고 있습니다. 정류장에서 {1}명이 내리고 {2}명이 탔습니다. 버스에 있는 사람은 몇 명일까요?',
+     ops:['-','+'],gen(){return[ri(15,35),ri(3,12),ri(2,10)]},tags:['+-']},
+    {text:'도서관에 책이 {0}권 있었습니다. 새 책 {1}권이 들어오고 {2}권을 빌려주었습니다. 남은 책은?',
+     ops:['+','-'],gen(){let a=ri(20,50),b=ri(5,15),c=ri(1,a+b-2);return[a,b,c]},tags:['+-']},
+    {text:'색종이가 {0}장 있었는데 {1}장을 사용하고, 선생님께 {2}장을 받았습니다. 색종이는 몇 장일까요?',
+     ops:['-','+'],gen(){let a=ri(15,30),b=ri(3,10);return[a,b,ri(2,10)]},tags:['+-']},
+    // ×+ 문제
+    {text:'한 봉지에 과자가 {0}개씩 들어있습니다. {1}봉지를 사고 {2}개를 더 받았습니다. 과자는 모두 몇 개?',
+     ops:['×','+'],gen(){return[ri(3,8),ri(2,6),ri(1,10)]},tags:['×+','mix']},
+    {text:'한 줄에 의자가 {0}개씩 {1}줄 있고, 여분의 의자가 {2}개 있습니다. 의자는 모두 몇 개?',
+     ops:['×','+'],gen(){return[ri(4,9),ri(2,5),ri(1,8)]},tags:['×+','mix']},
+    // ×- 문제
+    {text:'한 상자에 귤이 {0}개씩 {1}상자 있었는데 {2}개를 먹었습니다. 남은 귤은?',
+     ops:['×','-'],gen(){let a=ri(3,7),b=ri(2,5);return[a,b,ri(1,a*b-1)]},tags:['×-','mix']},
+    {text:'{0}원짜리 연필 {1}자루를 샀더니 가진 돈에서 {2}원이 남았습니다. 처음 가진 돈은 얼마일까요? (식: {0}×{1}+{2})',
+     ops:['×','+'],gen(){return[ri(500,1500),ri(2,5),ri(100,900)]},tags:['×+','mix']},
+    // ÷+ 문제
+    {text:'사탕 {0}개를 {1}명이 똑같이 나눈 후 {2}개를 더 받았습니다. 한 사람이 가진 사탕은?',
+     ops:['÷','+'],gen(){let b=ri(2,5);return[b*ri(2,6),b,ri(1,8)]},tags:['÷+','mix']},
+    // ÷- 문제
+    {text:'연필 {0}자루를 {1}명에게 똑같이 나누어 주고 {2}자루를 더 썼습니다. 한 사람당 남은 연필은?',
+     ops:['÷','-'],gen(){let b=ri(2,5),q=ri(4,10);return[b*q,b,ri(1,q-1)]},tags:['÷-','mix']},
+    // 복합 문제
+    {text:'학생 {0}명이 {1}개씩 과자를 받고, 선생님이 {2}개를 더 주셨습니다. 과자는 모두 몇 개?',
+     ops:['×','+'],gen(){return[ri(4,8),ri(2,5),ri(3,10)]},tags:['×+','mix']},
+    {text:'빵 {0}개를 만들어서 {1}개씩 상자에 담고 {2}상자를 팔았습니다. 남은 상자는 몇 개?',
+     ops:['÷','-'],gen(){let c=ri(2,5),b=ri(2,4);let boxes=c+ri(1,4);return[boxes*b,b,c]},tags:['÷-','mix']},
+    {text:'{0}명의 학생이 {1}개씩 색종이를 가져왔는데, {2}장이 찢어져서 버렸습니다. 쓸 수 있는 색종이는?',
+     ops:['×','-'],gen(){let a=ri(4,8),b=ri(3,6);return[a,b,ri(1,a*b-2)]},tags:['×-','mix']},
+    {text:'과일이 {0}개 있습니다. {1}개씩 {2}봉지를 더 샀습니다. 과일은 모두 몇 개?',
+     ops:['+','×'],gen(){return[ri(5,15),ri(3,7),ri(2,5)]},tags:['×+','mix']},
+];
+
+function getWPByDiff(diff){
+    if(diff===1) return WORD_PROBLEMS.filter(w=>w.tags.includes('+-'));
+    if(diff===2) return WORD_PROBLEMS.filter(w=>w.tags.includes('mix')||w.tags.includes('+-'));
+    return WORD_PROBLEMS;
+}
+
+function evalExpr(nums,ops){
+    let n=[...nums],o=[...ops];
+    let i=0;
+    while(i<o.length){
+        if(o[i]==='×'||o[i]==='÷'){
+            n.splice(i,2,o[i]==='×'?n[i]*n[i+1]:n[i]/n[i+1]);
+            o.splice(i,1);
+        } else i++;
+    }
+    let r=n[0];
+    for(i=0;i<o.length;i++) r=o[i]==='+'?r+n[i+1]:r-n[i+1];
+    return r;
+}
+
+function pickWP(diff){
+    const pool=getWPByDiff(diff);
+    for(let t=0;t<30;t++){
+        const tmpl=pick(pool);
+        const nums=tmpl.gen();
+        const ans=evalExpr(nums,[...tmpl.ops]);
+        if(Number.isInteger(ans)&&ans>=0&&ans<10000){
+            let txt=tmpl.text;
+            nums.forEach((n,i)=>txt=txt.replaceAll('{'+i+'}',n));
+            return {text:txt,numbers:nums,ops:[...tmpl.ops],answer:ans};
+        }
+    }
+    return {text:'3 + 5는 얼마일까요?',numbers:[3,5],ops:['+'],answer:8};
+}
+
+function genWordOpsQ(){
+    S.wp = pickWP(S.diff);
+    S.wpUserOps = S.wp.ops.map(()=>'?');
+    S.wpActiveSlot = 0;
+    renderWordOpsGame();
+    startTimer();
+}
+
+function renderWordOpsGame(){
+    const wp=S.wp;
+    let html=`<div class="timer-wrap"><div class="timer-outer"><div class="timer-fill"></div></div><div class="timer-row"><span>남은 시간</span><span class="timer-sec"></span></div></div>`;
+    html+=`<div class="wp-box">${wp.text}</div>`;
+    html+=`<div class="wp-expr" id="wpExpr">`;
+    for(let i=0;i<wp.numbers.length;i++){
+        html+=`<span class="wp-num">${wp.numbers[i]}</span>`;
+        if(i<wp.ops.length){
+            const cls=S.wpUserOps[i]==='?'?(i===S.wpActiveSlot?'active':''):'filled'+(i===S.wpActiveSlot?' active':'');
+            html+=`<div class="wp-blank ${cls}" data-s="${i}" onclick="wpSlotClick(${i})">${S.wpUserOps[i]}</div>`;
+        }
+    }
+    html+=`<span class="wp-eq">=</span><span class="wp-num">?</span></div>`;
+    html+=`<div class="op-palette">
+        <button class="op-btn" onclick="wpOpSelect('+')">+</button>
+        <button class="op-btn" onclick="wpOpSelect('-')">-</button>
+        <button class="op-btn" onclick="wpOpSelect('×')">×</button>
+        <button class="op-btn" onclick="wpOpSelect('÷')">÷</button>
+    </div>`;
+    const allFilled=S.wpUserOps.every(o=>o!=='?');
+    html+=`<div style="text-align:center"><button class="btn-check${allFilled?' show':''}" id="checkBtn" onclick="checkWordOps()">확인하기</button></div>`;
+    html+=`<div class="instruction" id="inst">${allFilled?'확인 버튼을 눌러 답을 확인하세요!':'알맞은 연산 기호를 넣어주세요!'}</div><div class="time-bonus" id="tBonus"></div><div class="explanation" id="expl"></div>`;
+    $('gameCard').innerHTML=html;
+}
+
+function wpSlotClick(i){
+    if(S.done) return;
+    S.wpActiveSlot=i;
+    renderWordOpsGame();
+}
+
+function wpOpSelect(op){
+    if(S.done) return;
+    S.wpUserOps[S.wpActiveSlot]=op;
+    // 다음 빈 슬롯으로 이동
+    let next=-1;
+    for(let i=S.wpActiveSlot+1;i<S.wpUserOps.length;i++){if(S.wpUserOps[i]==='?'){next=i;break;}}
+    if(next===-1) for(let i=0;i<S.wpActiveSlot;i++){if(S.wpUserOps[i]==='?'){next=i;break;}}
+    if(next!==-1) S.wpActiveSlot=next;
+    renderWordOpsGame();
+}
+
+function checkWordOps(){
+    if(S.done) return;
+    const correct = S.wpUserOps.every((op,i)=>op===S.wp.ops[i]);
+    S.done=true; stopTimer();
+    // 각 슬롯 맞/틀 표시
+    S.wpUserOps.forEach((op,i)=>{
+        const el=document.querySelector(`.wp-blank[data-s="${i}"]`);
+        if(el) el.classList.add(op===S.wp.ops[i]?'correct-mark':'wrong-mark');
+    });
+    if(correct){
+        onCorrect();
+    } else {
+        S.mistake=true; S.streak=0;
+        $('uiStreak').textContent='0';
+        setInst(`틀렸어요! 정답: ${S.wp.ops.join(' , ')}`,'err');
+        showWPExplanation();
+        document.querySelector('.btn-next').style.display='inline-block';
+    }
+}
+
+// ==================== 문장제 - 답 구하기 (Stage 7) ====================
+function genWordAnswerQ(){
+    S.wp = pickWP(S.diff);
+    S.wpAnswer = '';
+    renderWordAnswerGame();
+    startTimer();
+}
+
+function renderWordAnswerGame(){
+    const wp=S.wp;
+    let html=`<div class="timer-wrap"><div class="timer-outer"><div class="timer-fill"></div></div><div class="timer-row"><span>남은 시간</span><span class="timer-sec"></span></div></div>`;
+    html+=`<div class="wp-box">${wp.text}</div>`;
+    html+=`<div class="answer-row">정답: <div class="answer-display" id="ansDisp">${S.wpAnswer||'?'}</div></div>`;
+    html+=`<div class="numpad" id="numpad">`;
+    [7,8,9,4,5,6,1,2,3].forEach(n=>html+=`<button class="num-btn" onclick="numIn(${n})">${n}</button>`);
+    html+=`<button class="num-btn del-btn" onclick="numDel()">⌫</button>`;
+    html+=`<button class="num-btn" onclick="numIn(0)">0</button>`;
+    html+=`<button class="num-btn confirm-btn" onclick="numCheck()">✓</button>`;
+    html+=`</div>`;
+    html+=`<div class="instruction" id="inst">정답을 입력하고 ✓를 눌러주세요!</div><div class="time-bonus" id="tBonus"></div><div class="explanation" id="expl"></div>`;
+    $('gameCard').innerHTML=html;
+}
+
+function numIn(n){
+    if(S.done) return;
+    if(S.wpAnswer.length>=5) return;
+    S.wpAnswer += n;
+    $('ansDisp').textContent = S.wpAnswer;
+}
+function numDel(){
+    if(S.done) return;
+    S.wpAnswer = S.wpAnswer.slice(0,-1);
+    $('ansDisp').textContent = S.wpAnswer || '?';
+}
+function numCheck(){
+    if(S.done||!S.wpAnswer) return;
+    S.done=true; stopTimer();
+    const userAns = parseInt(S.wpAnswer);
+    const correct = userAns === S.wp.answer;
+    const disp=$('ansDisp');
+    if(correct){
+        disp.classList.add('correct-ans');
+        onCorrect();
+    } else {
+        disp.classList.add('wrong-ans');
+        S.mistake=true; S.streak=0;
+        $('uiStreak').textContent='0';
+        setInst(`틀렸어요! 정답: ${S.wp.answer}`,'err');
+        showWPExplanation();
+        document.querySelector('.btn-next').style.display='inline-block';
+    }
+    // 숫자패드 비활성화
+    document.querySelectorAll('.num-btn').forEach(b=>b.style.pointerEvents='none');
+}
+
+// ==================== 공통 함수 ====================
+function onCorrect(){
+    stopTimer(); S.done=true;
+    let pts=10, tb=0;
+    if(!S.mistake&&!S.hintUsed){
+        pts+=5; S.streak++;
+        if(S.streak>S.maxStreak) S.maxStreak=S.streak;
+        if(S.streak>=3) pts+=S.streak*2;
+        tb=Math.ceil(S.timeLeft*0.5); pts+=tb; S.totalTimeBonus+=tb;
+    } else { S.streak=0; }
+    S.score+=pts; S.correct++;
+    $('uiScore').textContent=S.score;
+    $('uiStreak').textContent=S.streak;
+    setInst(`정답! +${pts}점`,'ok');
+    if(tb>0){const b=$('tBonus');if(b){b.textContent=`⏱ 시간 보너스 +${tb}점!`;b.className='time-bonus show';}}
+    const st=STAGES[S.stageId-1];
+    if(st.type==='order') showOrderExplanation();
+    else showWPExplanation();
+    document.querySelector('.btn-next').style.display='inline-block';
+}
+
+function onTimeUp(){
+    S.done=true; S.streak=0;
+    $('uiStreak').textContent='0';
+    const st=STAGES[S.stageId-1];
+    if(st.type==='order') revealOrder();
+    else {
+        // 문장제: 정답 표시
+        if(st.type==='word-ops'){
+            S.wp.ops.forEach((op,i)=>{
+                const el=document.querySelector(`.wp-blank[data-s="${i}"]`);
+                if(el){el.textContent=op;el.classList.add('correct-mark');}
+            });
+        } else {
+            const d=$('ansDisp');if(d){d.textContent=S.wp.answer;d.classList.add('correct-ans');}
+            document.querySelectorAll('.num-btn').forEach(b=>b.style.pointerEvents='none');
+        }
+    }
+    setInst('⏰ 시간 초과! 정답을 확인하세요.','timeout');
+    if(st.type!=='order') showWPExplanation();
+    else showOrderExplanation();
+    document.querySelector('.btn-next').style.display='inline-block';
+}
+
+function revealOrder(){
+    S.correctOrder.forEach((idx,step)=>{
+        const el=document.querySelector(`.e-op[data-i="${idx}"]`);
+        if(el&&!el.classList.contains('selected')){
+            el.classList.add('revealed');
+            el.innerHTML=S.expr.ops[idx]+`<div class="badge">${step+1}</div>`;
+        }
+    });
+    document.querySelectorAll('.e-op').forEach(e=>e.classList.add('disabled'));
+}
+
+function showOrderExplanation(){
+    const el=$('expl'); if(!el) return;
+    const {numbers,ops,parenGroups}=S.expr;
+    let h='<h4>📝 풀이 순서</h4>';
+    S.correctOrder.forEach((idx,step)=>{
+        const d=getDepth(idx,parenGroups);
+        let reason=d>=2?'(안쪽 괄호)':d===1?'(괄호 안 먼저)':
+            (ops[idx]==='×'||ops[idx]==='÷')?'(곱셈/나눗셈 우선)':'(왼→오)';
+        h+=`<div class="step"><span class="step-badge">${step+1}</span>${numbers[idx]} ${ops[idx]} ${numbers[idx+1]} ${reason}</div>`;
+    });
+    el.innerHTML=h; el.classList.add('show');
+}
+
+function showWPExplanation(){
+    const el=$('expl'); if(!el||!S.wp) return;
+    const {numbers,ops,answer}=S.wp;
+    let exprStr=numbers.map((n,i)=>i<ops.length?n+' '+ops[i]:n).join(' ');
+    let h=`<h4>📝 풀이</h4><div class="step"><span class="step-badge">식</span>${exprStr}</div>`;
+    h+=`<div class="step"><span class="step-badge">=</span>${answer}</div>`;
+    el.innerHTML=h; el.classList.add('show');
+}
+
+function setInst(t,cls){const el=$('inst');if(el){el.textContent=t;el.className='instruction'+(cls?' '+cls:'');}}
+
+function doHint(){
+    if(S.done) return;
+    S.hintUsed=true;
+    const st=STAGES[S.stageId-1];
+    if(st.type==='order'){
+        if(S.step>=S.correctOrder.length) return;
+        const idx=S.correctOrder[S.step];
+        const el=document.querySelector(`.e-op[data-i="${idx}"]`);
+        if(el){el.style.borderColor='#fbbf24';el.style.boxShadow='0 0 12px rgba(251,191,36,.4)';
+            setTimeout(()=>{if(!el.classList.contains('selected')&&!el.classList.contains('revealed')){el.style.borderColor='';el.style.boxShadow='';}},1800);
+        }
+        const d=getDepth(idx,S.expr.parenGroups);
+        const op=S.expr.ops[idx];
+        setInst('💡 '+(d>0?'괄호 안을 먼저!':(op==='×'||op==='÷')?'곱셈/나눗셈이 먼저!':'왼쪽에서 오른쪽 순서!'),'');
+    } else if(st.type==='word-ops'){
+        // 첫 번째 빈 슬롯 힌트
+        for(let i=0;i<S.wpUserOps.length;i++){
+            if(S.wpUserOps[i]==='?'||S.wpUserOps[i]!==S.wp.ops[i]){
+                const op=S.wp.ops[i];
+                setInst(`💡 ${i+1}번째 기호는 "${op}" 입니다!`,'');
+                break;
+            }
+        }
+    } else {
+        setInst(`💡 정답은 ${String(S.wp.answer).charAt(0)}...으로 시작해요!`,'');
+    }
+}
+
+function resetQ(){
+    if(S.done && S.timeLeft<=0) return;
+    stopTimer();
+    S.userOrder=[];S.step=0;S.mistake=false;S.done=false;S.wpAnswer='';
+    S.wpUserOps=S.wp?S.wp.ops.map(()=>'?'):[];S.wpActiveSlot=0;
+    document.querySelector('.btn-next').style.display='none';
+    const st=STAGES[S.stageId-1];
+    if(st.type==='order') renderOrderGame();
+    else if(st.type==='word-ops') renderWordOpsGame();
+    else renderWordAnswerGame();
+    startTimer();
+}
+
+function showResults(){
+    stopTimer();
+    const pct=Math.round(S.correct/TOTAL_Q*100);
+    $('mScore').textContent=S.score;
+    $('mCorrect').textContent=S.correct+'/'+TOTAL_Q;
+    $('mStreak').textContent=S.maxStreak;
+    $('mTime').textContent='+'+S.totalTimeBonus;
+    if(pct>=90){$('mEmoji').textContent='🏆';$('mTitle').textContent='완벽해요!';$('mMsg').textContent='연산 순서를 완벽하게 이해하고 있어요!';}
+    else if(pct>=70){$('mEmoji').textContent='🎉';$('mTitle').textContent='잘했어요!';$('mMsg').textContent='조금만 더 연습하면 완벽해질 거예요!';}
+    else if(pct>=50){$('mEmoji').textContent='💪';$('mTitle').textContent='좋은 시작!';$('mMsg').textContent='규칙을 다시 확인하고 도전해보세요!';}
+    else{$('mEmoji').textContent='📚';$('mTitle').textContent='더 연습해봐요!';$('mMsg').textContent='연산 순서 규칙을 복습하고 다시 도전!';}
+    $('resultModal').classList.add('show');
+}
+</script>
+</body>
+</html>
