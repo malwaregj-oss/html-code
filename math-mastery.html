@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>수학 마스터리 챌린지</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+    @font-face {
+        font-family: 'NeoDunggeunmo';
+        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.3/NeoDunggeunmo.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+    }
+    body {
+        font-family: 'NeoDunggeunmo', sans-serif;
+        background-color: #000;
+        color: #fff;
+        user-select: none;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+    }
+    .pixel-box {
+        background-color: #0000AA;
+        border: 4px solid #fff;
+        box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.5), inset 4px 4px 0px 0px rgba(255,255,255,0.3);
+        image-rendering: pixelated;
+    }
+    .pixel-button {
+        background-color: #AA0000;
+        color: white;
+        border: 4px solid #fff;
+        box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.5);
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+    .pixel-button:hover {
+        background-color: #D40000;
+    }
+    .pixel-button:active {
+        transform: scale(0.95);
+        box-shadow: inset 4px 4px 0px 0px rgba(0,0,0,0.5);
+    }
+    .pixel-input {
+        background-color: #000;
+        color: #00FF00;
+        border: 4px solid #fff;
+        padding: 8px;
+        outline: none;
+        font-family: 'NeoDunggeunmo', sans-serif;
+    }
+    .pixel-input:focus {
+        border-color: #FFFF00;
+    }
+    .fraction-line {
+        border-bottom: 2px solid currentcolor;
+    }
+    .scanlines {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        background-size: 100% 4px, 6px 100%;
+        pointer-events: none;
+        z-index: 50;
+    }
+</style>
+</head>
+<body>
+<div id="root">
+    <div style="padding:40px; text-align:center; font-family:sans-serif; color:#fff;">
+        로딩 중... 화면이 계속 이 상태라면 인터넷 연결 또는 방화벽에서 cdn.jsdelivr.net이 차단되었을 수 있습니다.
+    </div>
+</div>
+
+<script>
+    window.addEventListener('error', function(e) {
+        document.getElementById('root').innerHTML =
+            '<div style="padding:40px;color:#fff;font-family:sans-serif;">' +
+            '<h2 style="color:#ff6666;">로딩 오류 발생</h2>' +
+            '<p>' + (e.message || '알 수 없는 오류') + '</p>' +
+            '<p style="color:#aaa;font-size:13px;margin-top:20px;">CDN(jsdelivr.net) 접속이 차단된 네트워크일 수 있습니다. 다른 네트워크(휴대폰 핫스팟 등)에서 시도해보세요.</p>' +
+            '</div>';
+    });
+</script>
+
+<script>
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+var _React = React,
+  useState = _React.useState,
+  useEffect = _React.useEffect;
+
+// --- 로컬 저장 키 ---
+var STORAGE_PLAYERS_KEY = 'mathMastery_players';
+var STORAGE_STATE_KEY = 'mathMastery_gameState';
+var STORAGE_USERID_KEY = 'mathMastery_userId';
+
+// --- 로컬 저장소 헬퍼 ---
+var loadPlayers = function loadPlayers() {
+  try {
+    var raw = localStorage.getItem(STORAGE_PLAYERS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+};
+var savePlayers = function savePlayers(playersObj) {
+  localStorage.setItem(STORAGE_PLAYERS_KEY, JSON.stringify(playersObj));
+};
+var loadGameState = function loadGameState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_STATE_KEY);
+    return raw ? JSON.parse(raw).status : 'playing';
+  } catch (e) {
+    return 'playing';
+  }
+};
+var saveGameState = function saveGameState(status) {
+  localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
+    status: status
+  }));
+};
+var getOrCreateUserId = function getOrCreateUserId() {
+  var id = localStorage.getItem(STORAGE_USERID_KEY);
+  if (!id) {
+    id = 'user_' + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem(STORAGE_USERID_KEY, id);
+  }
+  return id;
+};
+
+// --- 게임 마스터 대사 ---
+var GM_MESSAGES = ["끈기가 대단하군 도전자여.", "훌륭한 성장이 느껴지는군.", "마스터의 자리가 멀지 않았다.", "포기하지 않는 마음이 가장 큰 무기지.", "좋아, 그 기세로 계속 나아가라!", "실수에서 배우는 자가 진정한 승자다.", "너의 집중력에 경의를 표한다."];
+
+// --- 수학 문제 생성 로직 ---
+var getLCM = function getLCM(a, b) {
+  var min = Math.min(a, b);
+  var max = Math.max(a, b);
+  var i = max;
+  while (i % min !== 0) {
+    i += max;
+  }
+  return i;
+};
+var _generateProblem = function generateProblem() {
+  var isSub = Math.random() > 0.5;
+  var isMixed = Math.random() > 0.4;
+  var denoms = [[2, 3], [3, 4], [4, 5], [5, 6], [2, 5], [3, 5], [3, 8], [4, 9]];
+  var pair = denoms[Math.floor(Math.random() * denoms.length)];
+  var c = pair[0];
+  var f = pair[1];
+  var L = getLCM(c, f);
+  var b = Math.floor(Math.random() * (c - 1)) + 1;
+  var e = Math.floor(Math.random() * (f - 1)) + 1;
+  var num1 = b * (L / c);
+  var num2 = e * (L / f);
+  var A = 0,
+    D = 0;
+  if (isMixed) {
+    A = Math.floor(Math.random() * 5) + 3;
+    D = Math.floor(Math.random() * (A - 2)) + 1;
+  } else {
+    if (isSub && num1 / L < num2 / L) {
+      var temp = b;
+      b = e;
+      e = temp;
+      temp = c;
+      c = f;
+      f = temp;
+      temp = num1;
+      num1 = num2;
+      num2 = temp;
+    }
+  }
+  var formatFrac = function formatFrac(whole, d, nStr) {
+    if (whole === 0) return "{".concat(nStr, "/").concat(d, "}");
+    return "".concat(whole, " {").concat(nStr, "/").concat(d, "}");
+  };
+  var original = "";
+  var steps = [];
+  var answers = [];
+  if (isSub) {
+    original = "".concat(formatFrac(A, c, b), " - ").concat(formatFrac(D, f, e));
+    var step1 = "= ".concat(formatFrac(A, L, num1), " - ").concat(formatFrac(D, L, '[ ]'));
+    answers.push(num2);
+    steps.push(step1);
+    var finalWhole = A - D;
+    var finalNum = num1 - num2;
+    if (finalNum < 0) {
+      var borrowStep = "= (".concat(formatFrac(A - 1, L, L), " + ").concat(formatFrac(0, L, '[ ]'), ") - ").concat(formatFrac(D, L, '[ ]'));
+      answers.push(num1);
+      answers.push(num2);
+      steps.push(borrowStep);
+      finalWhole -= 1;
+      finalNum += L;
+    }
+    var stepFinal = "= ".concat(formatFrac(finalWhole, L, '[ ]'));
+    answers.push(finalNum);
+    steps.push(stepFinal);
+  } else {
+    original = "".concat(formatFrac(A, c, b), " + ").concat(formatFrac(D, f, e));
+    var _step = "= ".concat(formatFrac(A, L, num1), " + ").concat(formatFrac(D, L, '[ ]'));
+    answers.push(num2);
+    steps.push(_step);
+    var _finalWhole = A + D;
+    var _finalNum = num1 + num2;
+    if (_finalNum >= L) {
+      _finalWhole += 1;
+      _finalNum -= L;
+    }
+    if (_finalNum === 0) {
+      return _generateProblem();
+    }
+    var _stepFinal = "= ".concat(formatFrac(_finalWhole, L, '[ ]'));
+    answers.push(_finalNum);
+    steps.push(_stepFinal);
+  }
+  return {
+    original: original,
+    steps: steps,
+    answers: answers
+  };
+};
+var calculateLevel = function calculateLevel(xp) {
+  if (xp < 50) return 1;
+  if (xp < 100) return 2;
+  if (xp < 200) return 3;
+  if (xp < 350) return 4;
+  if (xp < 550) return 5;
+  if (xp < 800) return 6;
+  return 7;
+};
+
+// --- 컴포넌트들 ---
+
+var FractionText = function FractionText(_ref) {
+  var text = _ref.text;
+  var parts = text.split(/(\{.*?\})/g);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center flex-wrap text-xl md:text-3xl leading-none my-2"
+  }, parts.map(function (part, i) {
+    if (part.startsWith('{') && part.endsWith('}')) {
+      var inner = part.slice(1, -1);
+      var _inner$split = inner.split('/'),
+        _inner$split2 = _slicedToArray(_inner$split, 2),
+        num = _inner$split2[0],
+        den = _inner$split2[1];
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        className: "inline-flex flex-col items-center justify-center align-middle mx-2 text-lg md:text-2xl mt-[-8px]"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "fraction-line w-full text-center pb-1 text-[#FFFF00]"
+      }, num === '[ ]' ? /*#__PURE__*/React.createElement("span", {
+        className: "text-red-400"
+      }, "[ ]") : num), /*#__PURE__*/React.createElement("span", {
+        className: "pt-1 text-[#FFFF00]"
+      }, den));
+    }
+    return /*#__PURE__*/React.createElement("span", {
+      key: i,
+      className: "whitespace-pre"
+    }, part);
+  }));
+};
+var RewardModal = function RewardModal(_ref2) {
+  var reward = _ref2.reward,
+    onClose = _ref2.onClose;
+  if (!reward) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-8 max-w-md w-full text-center animate-bounce"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl mb-4"
+  }, "\uD83C\uDF81"), /*#__PURE__*/React.createElement("h2", {
+    className: "text-2xl text-yellow-300 mb-2"
+  }, reward.msg), /*#__PURE__*/React.createElement("p", {
+    className: "text-xl mb-6"
+  }, "+", reward.xp, " XP \uD68D\uB4DD!"), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "pixel-button px-6 py-3 text-xl w-full"
+  }, "\uACC4\uC18D\uD558\uAE30")));
+};
+var GameScreen = function GameScreen(_ref3) {
+  var userId = _ref3.userId,
+    players = _ref3.players,
+    gameState = _ref3.gameState,
+    refreshPlayers = _ref3.refreshPlayers;
+  var _useState = useState(null),
+    _useState2 = _slicedToArray(_useState, 2),
+    problem = _useState2[0],
+    setProblem = _useState2[1];
+  var _useState3 = useState(''),
+    _useState4 = _slicedToArray(_useState3, 2),
+    input = _useState4[0],
+    setInput = _useState4[1];
+  var _useState5 = useState(''),
+    _useState6 = _slicedToArray(_useState5, 2),
+    feedback = _useState6[0],
+    setFeedback = _useState6[1];
+  var _useState7 = useState(0),
+    _useState8 = _slicedToArray(_useState7, 2),
+    retryCount = _useState8[0],
+    setRetryCount = _useState8[1];
+  var _useState9 = useState(null),
+    _useState0 = _slicedToArray(_useState9, 2),
+    reward = _useState0[0],
+    setReward = _useState0[1];
+  var _useState1 = useState("도전을 환영한다, 낯선이여. 문제를 해결하여 경험치를 모으고 마스터의 자리에 도달하라."),
+    _useState10 = _slicedToArray(_useState1, 2),
+    gmMsg = _useState10[0],
+    setGmMsg = _useState10[1];
+  var me = players.find(function (p) {
+    return p.id === userId;
+  }) || {
+    xp: 0,
+    level: 1,
+    name: '알 수 없음'
+  };
+  useEffect(function () {
+    setProblem(_generateProblem());
+  }, []);
+  var updatePlayerXP = function updatePlayerXP(xpChange) {
+    var newXp = Math.max(0, me.xp + xpChange);
+    var newLevel = calculateLevel(newXp);
+    var allPlayers = loadPlayers();
+    allPlayers[userId] = _objectSpread(_objectSpread({}, allPlayers[userId]), {}, {
+      xp: newXp,
+      level: newLevel,
+      updatedAt: Date.now()
+    });
+    savePlayers(allPlayers);
+    refreshPlayers();
+  };
+  var handleSubmit = function handleSubmit(e) {
+    e.preventDefault();
+    if (!input.trim() || !problem) return;
+    var userAnswers = input.split(',').map(function (s) {
+      return parseInt(s.trim());
+    });
+    var isCorrect = userAnswers.length === problem.answers.length && userAnswers.every(function (ans, i) {
+      return ans === problem.answers[i];
+    });
+    if (isCorrect) {
+      setFeedback('');
+      setRetryCount(0);
+      var rand = Math.random();
+      var currentReward;
+      if (rand < 0.4) currentReward = {
+        type: 'base',
+        xp: 10,
+        msg: '기본 보상'
+      };else if (rand < 0.7) currentReward = {
+        type: 'double',
+        xp: 20,
+        msg: '경험치 2배!'
+      };else if (rand < 0.9) currentReward = {
+        type: 'lucky',
+        xp: Math.floor(Math.random() * 51),
+        msg: '행운의 상자!'
+      };else currentReward = {
+        type: 'cheer',
+        xp: 30,
+        msg: '도전자 응원 카드!'
+      };
+      setReward(currentReward);
+      updatePlayerXP(currentReward.xp);
+      setGmMsg(GM_MESSAGES[Math.floor(Math.random() * GM_MESSAGES.length)]);
+    } else {
+      if (retryCount === 0) {
+        setRetryCount(1);
+        setFeedback("틀렸습니다! 다시 계산해 보세요.\n힌트: 공통분모를 만들 때 분자와 분모에 같은 수를 곱했는지 확인하세요.");
+        setInput('');
+      } else {
+        setFeedback("\uC624\uB2F5\uC785\uB2C8\uB2E4! \uC815\uB2F5\uC740 [ ".concat(problem.answers.join(', '), " ] \uC600\uC2B5\uB2C8\uB2E4. (-5 XP)"));
+        updatePlayerXP(-5);
+        setTimeout(function () {
+          setProblem(_generateProblem());
+          setInput('');
+          setFeedback('');
+          setRetryCount(0);
+        }, 3000);
+      }
+    }
+  };
+  var handleNext = function handleNext() {
+    setReward(null);
+    setProblem(_generateProblem());
+    setInput('');
+  };
+  var myIndex = players.findIndex(function (p) {
+    return p.id === userId;
+  });
+  var startIdx = Math.max(0, myIndex - 5);
+  var endIdx = Math.min(players.length, startIdx + 11);
+  var visiblePlayers = players.slice(startIdx, endIdx);
+  if (gameState === 'ended') {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-col items-center justify-center min-h-screen p-4 bg-black"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pixel-box p-8 text-center max-w-2xl w-full"
+    }, /*#__PURE__*/React.createElement("h1", {
+      className: "text-4xl text-yellow-300 mb-6"
+    }, "\uAC8C\uC784 \uC885\uB8CC!"), /*#__PURE__*/React.createElement("p", {
+      className: "text-2xl mb-4"
+    }, "\uCD5C\uC885 \uACB0\uACFC"), /*#__PURE__*/React.createElement("p", {
+      className: "text-xl mb-2 text-green-400"
+    }, "\uB098\uC758 \uB808\uBCA8: Lv.", me.level), /*#__PURE__*/React.createElement("p", {
+      className: "text-xl mb-6"
+    }, "\uCD5C\uC885 \uACBD\uD5D8\uCE58: ", me.xp, " XP"), /*#__PURE__*/React.createElement("div", {
+      className: "text-left space-y-2 mt-4 max-h-60 overflow-y-auto p-4 bg-black border-2 border-gray-600"
+    }, players.map(function (p, i) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: p.id,
+        className: "flex justify-between ".concat(p.id === userId ? 'text-yellow-300 font-bold' : 'text-gray-300')
+      }, /*#__PURE__*/React.createElement("span", null, i + 1, "\uC704. ", p.name), /*#__PURE__*/React.createElement("span", null, "Lv.", p.level, " (", p.xp, "XP)"));
+    }))));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col md:flex-row min-h-screen p-4 gap-4 max-w-7xl mx-auto z-10 relative"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-4 flex justify-between items-center bg-blue-900"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-xl text-yellow-300 mr-4"
+  }, "\uD83D\uDC64 ", me.name), /*#__PURE__*/React.createElement("span", {
+    className: "text-xl text-green-400 mr-4"
+  }, "Lv.", me.level)), /*#__PURE__*/React.createElement("div", {
+    className: "text-xl"
+  }, "XP: ", me.xp)), /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-4 bg-gray-900 border-gray-400 flex items-start gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-4xl"
+  }, "\uD83E\uDDD9\u200D\u2642\uFE0F"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-gray-400 text-sm mb-1"
+  }, "\uAC8C\uC784 \uB9C8\uC2A4\uD130"), /*#__PURE__*/React.createElement("p", {
+    className: "text-lg leading-relaxed"
+  }, gmMsg))), /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-6 flex-1 flex flex-col bg-black"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-2xl text-yellow-300 mb-6"
+  }, "Q. \uB2E4\uC74C\uC744 \uACC4\uC0B0\uD558\uC2DC\uC624."), problem && /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mb-6 border-b-2 border-gray-700 pb-4"
+  }, /*#__PURE__*/React.createElement(FractionText, {
+    text: problem.original
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 pl-4 border-l-4 border-blue-800"
+  }, problem.steps.map(function (step, idx) {
+    return /*#__PURE__*/React.createElement(FractionText, {
+      key: idx,
+      text: step
+    });
+  }))), feedback && /*#__PURE__*/React.createElement("div", {
+    className: "mt-6 p-4 border-2 ".concat(retryCount > 0 && !feedback.includes('정답은') ? 'border-yellow-500 text-yellow-300' : 'border-red-500 text-red-400', " bg-black")
+  }, feedback.split('\n').map(function (line, i) {
+    return /*#__PURE__*/React.createElement("p", {
+      key: i
+    }, line);
+  })), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSubmit,
+    className: "mt-8 flex gap-2 flex-col sm:flex-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: input,
+    onChange: function onChange(e) {
+      return setInput(e.target.value);
+    },
+    placeholder: "\uBE48\uCE78\uC758 \uC22B\uC790\uB97C \uC27C\uD45C(,)\uB85C \uAD6C\uBD84\uD558\uC5EC \uC785\uB825",
+    className: "pixel-input flex-1 text-lg",
+    disabled: !!reward || feedback && feedback.includes('정답은'),
+    autoFocus: true
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "pixel-button px-8 py-3 text-xl whitespace-nowrap",
+    disabled: !!reward || feedback && feedback.includes('정답은')
+  }, "\uACF5\uACA9! (\uC81C\uCD9C)")))), /*#__PURE__*/React.createElement("div", {
+    className: "w-full md:w-80 pixel-box p-4 bg-blue-950 flex flex-col"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl text-yellow-300 text-center mb-4 border-b-2 border-white pb-2"
+  }, "\uD83C\uDFC6 \uB7AD\uD0B9 (\uC774 \uAE30\uAE30 \uAE30\uC900)"), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 overflow-y-auto space-y-2"
+  }, visiblePlayers.map(function (p) {
+    var globalRank = players.findIndex(function (x) {
+      return x.id === p.id;
+    }) + 1;
+    var isMe = p.id === userId;
+    return /*#__PURE__*/React.createElement("div", {
+      key: p.id,
+      className: "flex justify-between items-center p-2 border-2 ".concat(isMe ? 'border-yellow-300 bg-yellow-900 bg-opacity-30' : 'border-transparent')
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2 overflow-hidden"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-gray-400 w-6"
+    }, globalRank, "."), /*#__PURE__*/React.createElement("span", {
+      className: "truncate"
+    }, p.name)), /*#__PURE__*/React.createElement("div", {
+      className: "text-right shrink-0"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "text-green-400 text-sm"
+    }, "Lv.", p.level), /*#__PURE__*/React.createElement("div", {
+      className: "text-xs text-gray-400"
+    }, p.xp, "XP")));
+  }))), /*#__PURE__*/React.createElement(RewardModal, {
+    reward: reward,
+    onClose: handleNext
+  }));
+};
+var TeacherDashboard = function TeacherDashboard(_ref4) {
+  var players = _ref4.players,
+    gameState = _ref4.gameState,
+    setGameStateLocally = _ref4.setGameStateLocally,
+    resetAllData = _ref4.resetAllData;
+  var handleEndGame = function handleEndGame() {
+    if (confirm("정말로 게임을 종료하시겠습니까? 결과창으로 넘어갑니다.")) {
+      saveGameState('ended');
+      setGameStateLocally('ended');
+    }
+  };
+  var handleRestart = function handleRestart() {
+    if (confirm("게임을 다시 시작하시겠습니까? 학생들의 점수는 초기화되지 않습니다.")) {
+      saveGameState('playing');
+      setGameStateLocally('playing');
+    }
+  };
+  var handleResetData = function handleResetData() {
+    if (confirm("⚠️ 모든 학생 점수를 초기화합니다. 되돌릴 수 없습니다. 진행할까요?")) {
+      resetAllData();
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen p-8 flex flex-col items-center bg-black z-10 relative"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-8 max-w-4xl w-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center mb-8 border-b-4 border-white pb-4 flex-wrap gap-2"
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "text-3xl text-yellow-300"
+  }, "\uD83D\uDC68\u200D\uD83C\uDFEB \uAD50\uC0AC \uB300\uC2DC\uBCF4\uB4DC"), /*#__PURE__*/React.createElement("div", {
+    className: "space-x-4"
+  }, gameState === 'playing' ? /*#__PURE__*/React.createElement("button", {
+    onClick: handleEndGame,
+    className: "pixel-button px-6 py-2"
+  }, "\uAC8C\uC784 \uAC15\uC81C \uC885\uB8CC") : /*#__PURE__*/React.createElement("button", {
+    onClick: handleRestart,
+    className: "pixel-button px-6 py-2 bg-green-700"
+  }, "\uAC8C\uC784 \uC7AC\uC2DC\uC791"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleResetData,
+    className: "pixel-button px-6 py-2 bg-red-900"
+  }, "\uC810\uC218 \uCD08\uAE30\uD654"), /*#__PURE__*/React.createElement("button", {
+    onClick: function onClick() {
+      return window.location.reload();
+    },
+    className: "pixel-button px-6 py-2 bg-gray-700"
+  }, "\uB098\uAC00\uAE30"))), /*#__PURE__*/React.createElement("div", {
+    className: "mb-4 bg-yellow-900 bg-opacity-30 border-2 border-yellow-600 p-3 text-sm text-yellow-200"
+  }, "\u26A0\uFE0F \uC774 \uBC84\uC804\uC740 \uC11C\uBC84 \uC5C6\uC774 \uC774 \uBE0C\uB77C\uC6B0\uC800(\uAE30\uAE30)\uC5D0\uB9CC \uB370\uC774\uD130\uAC00 \uC800\uC7A5\uB429\uB2C8\uB2E4. \uB2E4\uB978 \uAE30\uAE30\uC758 \uD559\uC0DD \uC810\uC218\uB294 \uBCF4\uC774\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-2 gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-black border-2 border-gray-600 p-4 h-96 overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl mb-4 text-green-400 sticky top-0 bg-black pb-2 border-b border-gray-700"
+  }, "\uC804\uCCB4 \uD559\uC0DD \uBA85\uB2E8 (", players.length, "\uBA85)"), /*#__PURE__*/React.createElement("table", {
+    className: "w-full text-left"
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    className: "text-gray-400"
+  }, /*#__PURE__*/React.createElement("th", {
+    className: "pb-2"
+  }, "\uC21C\uC704"), /*#__PURE__*/React.createElement("th", {
+    className: "pb-2"
+  }, "\uC774\uB984"), /*#__PURE__*/React.createElement("th", {
+    className: "pb-2"
+  }, "\uB808\uBCA8"), /*#__PURE__*/React.createElement("th", {
+    className: "pb-2"
+  }, "\uACBD\uD5D8\uCE58"))), /*#__PURE__*/React.createElement("tbody", null, players.map(function (p, i) {
+    return /*#__PURE__*/React.createElement("tr", {
+      key: p.id,
+      className: "border-t border-gray-800"
+    }, /*#__PURE__*/React.createElement("td", {
+      className: "py-2"
+    }, i + 1), /*#__PURE__*/React.createElement("td", {
+      className: "py-2 text-yellow-100"
+    }, p.name), /*#__PURE__*/React.createElement("td", {
+      className: "py-2 text-green-300"
+    }, "Lv.", p.level), /*#__PURE__*/React.createElement("td", {
+      className: "py-2"
+    }, p.xp));
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col gap-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-black border-2 border-gray-600 p-4"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-lg text-yellow-300 mb-2"
+  }, "\uD604\uC7AC \uC0C1\uD0DC"), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl"
+  }, gameState === 'playing' ? '🟢 진행 중' : '🔴 종료됨')), /*#__PURE__*/React.createElement("div", {
+    className: "bg-black border-2 border-gray-600 p-4 flex-1"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-lg text-yellow-300 mb-2"
+  }, "\uC811\uC18D \uC548\uB0B4"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm text-gray-400 mb-4"
+  }, "\uD559\uC0DD\uB4E4\uC5D0\uAC8C \uC774 \uC8FC\uC18C\uB97C \uACF5\uC720\uD558\uC138\uC694."), /*#__PURE__*/React.createElement("p", {
+    className: "break-all bg-gray-900 p-2 text-sm"
+  }, window.location.href))))));
+};
+function App() {
+  var _useState11 = useState(getOrCreateUserId()),
+    _useState12 = _slicedToArray(_useState11, 1),
+    userId = _useState12[0];
+  var _useState13 = useState(''),
+    _useState14 = _slicedToArray(_useState13, 2),
+    nameInput = _useState14[0],
+    setNameInput = _useState14[1];
+  var _useState15 = useState([]),
+    _useState16 = _slicedToArray(_useState15, 2),
+    players = _useState16[0],
+    setPlayers = _useState16[1];
+  var _useState17 = useState('playing'),
+    _useState18 = _slicedToArray(_useState17, 2),
+    gameState = _useState18[0],
+    setGameState = _useState18[1];
+  var _useState19 = useState('login'),
+    _useState20 = _slicedToArray(_useState19, 2),
+    mode = _useState20[0],
+    setMode = _useState20[1];
+  var refreshPlayers = function refreshPlayers() {
+    var allPlayers = loadPlayers();
+    var list = Object.keys(allPlayers).map(function (id) {
+      return _objectSpread({
+        id: id
+      }, allPlayers[id]);
+    });
+    list.sort(function (a, b) {
+      return b.xp - a.xp;
+    });
+    setPlayers(list);
+  };
+  useEffect(function () {
+    refreshPlayers();
+    setGameState(loadGameState());
+  }, []);
+  var handleJoin = function handleJoin(e) {
+    e.preventDefault();
+    if (!nameInput.trim()) return;
+    var allPlayers = loadPlayers();
+    if (!allPlayers[userId]) {
+      allPlayers[userId] = {
+        name: nameInput.trim(),
+        xp: 0,
+        level: 1,
+        joinedAt: Date.now()
+      };
+    } else {
+      allPlayers[userId].name = nameInput.trim();
+    }
+    savePlayers(allPlayers);
+    refreshPlayers();
+    setMode('game');
+  };
+  var handleTeacherLogin = function handleTeacherLogin() {
+    var pass = prompt("교사 비밀번호를 입력하세요 (기본값: 1234)");
+    if (pass === "1234") {
+      refreshPlayers();
+      setMode('teacher');
+    } else if (pass !== null) {
+      alert("비밀번호가 틀렸습니다.");
+    }
+  };
+  var resetAllData = function resetAllData() {
+    localStorage.removeItem(STORAGE_PLAYERS_KEY);
+    localStorage.removeItem(STORAGE_STATE_KEY);
+    refreshPlayers();
+    setGameState('playing');
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "bg-black min-h-screen text-white"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "scanlines"
+  }), mode === 'teacher' && /*#__PURE__*/React.createElement(TeacherDashboard, {
+    players: players,
+    gameState: gameState,
+    setGameStateLocally: setGameState,
+    resetAllData: resetAllData
+  }), mode === 'game' && /*#__PURE__*/React.createElement(GameScreen, {
+    userId: userId,
+    players: players,
+    gameState: gameState,
+    refreshPlayers: refreshPlayers
+  }), mode === 'login' && /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen flex items-center justify-center p-4 z-10 relative"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pixel-box p-8 max-w-md w-full text-center relative"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleTeacherLogin,
+    className: "absolute top-2 right-2 text-xs text-gray-500 hover:text-white underline z-20 cursor-pointer"
+  }, "\uAD50\uC0AC \uBAA8\uB4DC"), /*#__PURE__*/React.createElement("h1", {
+    className: "text-3xl text-yellow-300 mb-2 mt-4 leading-relaxed"
+  }, "\uC218\uD559 \uB9C8\uC2A4\uD130\uB9AC", /*#__PURE__*/React.createElement("br", null), "\uCC4C\uB9B0\uC9C0"), /*#__PURE__*/React.createElement("p", {
+    className: "text-green-400 mb-8 text-sm"
+  }, "- \uBD84\uC218\uC758 \uB367\uC148\uACFC \uBE84\uC148 \uD3B8 -"), /*#__PURE__*/React.createElement("div", {
+    className: "text-6xl mb-6"
+  }, "\u2694\uFE0F"), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleJoin,
+    className: "flex flex-col gap-4"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: nameInput,
+    onChange: function onChange(e) {
+      return setNameInput(e.target.value);
+    },
+    placeholder: "\uB3C4\uC804\uC790\uC758 \uC774\uB984\uC744 \uC785\uB825\uD558\uB77C",
+    className: "pixel-input text-center text-xl py-3",
+    maxLength: 10,
+    required: true
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "pixel-button py-4 text-xl mt-4"
+  }, "\uAC8C\uC784 \uC2DC\uC791")))));
+}
+var root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(/*#__PURE__*/React.createElement(App, null));
+</script>
+</body>
+</html>
